@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: hackathon-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    container_name: hackathon-redpanda
+    command:
+      - redpanda
+      - start
+      - --smp 1
+      - --memory 1G
+      - --reserve-memory 0M
+      - --overprovisioned
+      - --node-id 0
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+    ports:
+      - "19092:19092"
+      - "9092:9092"
+      - "9644:9644"
+      - "8081:8081"
+      - "8082:8082"
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+
+  redpanda-console:
+    image: docker.redpanda.com/redpandadata/console:latest
+    container_name: redpanda-console
+    entrypoint: /app/console
+    environment:
+      KAFKA_BROKERS: redpanda:9092
+    ports:
+      - 8080:8080
+    depends_on:
+      - redpanda
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: hackathon-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - backend-api
+
+  backend-api:
+    build:
+      context: ./backend
+    container_name: hackathon-backend-api
+    command: uvicorn main:app --host 0.0.0.0 --port 5000 --reload
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/
+      - REDPANDA_BROKERS=redpanda:9092
+    depends_on:
+      - mongodb
+      - redpanda
+
+  backend-consumer:
+    build:
+      context: ./backend
+    container_name: hackathon-backend-consumer
+    command: python consumer.py
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/
+      - REDPANDA_BROKERS=redpanda:9092
+    depends_on:
+      - mongodb
+      - redpanda
+
+volumes:
+  mongodb_data:
+  redpanda_data:
