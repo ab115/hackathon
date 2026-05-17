@@ -28,12 +28,12 @@ export function LandingPage() {
         className="relative z-10 border-b border-white/10 backdrop-blur-xl bg-black/20"
       >
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 flex items-center justify-center">
-              <Sparkles className="w-6 h-6" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 flex items-center justify-center shrink-0">
+              <img src="/icon.svg" alt="Scalegrad Icon" className="w-8 h-8" />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-              HackFusion
+              Scalegrad
             </span>
           </div>
           <div className="flex gap-3">
@@ -225,16 +225,36 @@ export function LandingPage() {
           <div className="relative">
             <h2 className="text-4xl font-bold mb-4">Ready to Build the Future?</h2>
             <p className="text-gray-400 mb-8 max-w-xl mx-auto">
-              Join thousands of innovators competing in the most advanced hackathon platform
+              Join thousands of innovators competing on Scalegrad - the most advanced hackathon platform
             </p>
-            <Link to="/student">
-              <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white gap-2">
-                Get Started Now <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
+            <div className="flex flex-col items-center gap-8">
+              <Link to="/student">
+                <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white gap-2">
+                  Get Started Now <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+              <img src="/Powered by Scalegrad.svg" alt="Powered by Scalegrad" className="h-8 opacity-50" />
+            </div>
           </div>
         </div>
       </motion.div>
+
+      {/* Footer */}
+      <footer className="relative border-t border-white/10 bg-black/60 backdrop-blur-xl py-12">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="flex flex-col items-center md:items-start gap-4">
+              <img src="/Scalegrad Logo.svg" alt="Scalegrad Logo" className="h-10" />
+              <p className="text-gray-500 text-sm">© 2026 Scalegrad. All rights reserved.</p>
+            </div>
+            <div className="flex gap-8">
+              <a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
+              <a href="mailto:support@scalegrad.com" className="text-gray-400 hover:text-white transition-colors">Contact Support</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

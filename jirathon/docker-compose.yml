@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  jirathon-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  jirathon-ui:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - jirathon-api
+    restart: unless-stopped

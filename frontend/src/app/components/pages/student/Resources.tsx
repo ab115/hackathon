@@ -1,99 +1,35 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { BookOpen, Code, FileText, Video, Download, ExternalLink, Star } from 'lucide-react';
+import { BookOpen, Code, FileText, Video, Download, ExternalLink, Star, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
-
-const tutorials = [
-  {
-    title: 'Building a FinTech App with React',
-    duration: '45 min',
-    level: 'Intermediate',
-    category: 'FinTech',
-    rating: 4.8,
-  },
-  {
-    title: 'Introduction to Web3 Development',
-    duration: '60 min',
-    level: 'Beginner',
-    category: 'Web3',
-    rating: 4.9,
-  },
-  {
-    title: 'Machine Learning for Beginners',
-    duration: '90 min',
-    level: 'Beginner',
-    category: 'AI/ML',
-    rating: 4.7,
-  },
-  {
-    title: 'Smart Contract Security',
-    duration: '50 min',
-    level: 'Advanced',
-    category: 'Web3',
-    rating: 4.9,
-  },
-];
-
-const templates = [
-  {
-    title: 'React + TypeScript Starter',
-    description: 'Production-ready React template with TypeScript',
-    downloads: '12.5K',
-    category: 'Frontend',
-  },
-  {
-    title: 'Node.js API Boilerplate',
-    description: 'RESTful API with authentication and database',
-    downloads: '8.3K',
-    category: 'Backend',
-  },
-  {
-    title: 'Web3 DApp Template',
-    description: 'Complete Web3 application with wallet integration',
-    downloads: '6.7K',
-    category: 'Web3',
-  },
-  {
-    title: 'ML Model Deployment',
-    description: 'Deploy ML models with FastAPI and Docker',
-    downloads: '5.2K',
-    category: 'AI/ML',
-  },
-];
-
-const documentation = [
-  {
-    title: 'Hackathon Rules & Guidelines',
-    description: 'Everything you need to know about participating',
-    category: 'General',
-  },
-  {
-    title: 'Judging Criteria Explained',
-    description: 'Understand how projects are evaluated',
-    category: 'Judging',
-  },
-  {
-    title: 'Team Formation Best Practices',
-    description: 'Tips for building a winning team',
-    category: 'Teams',
-  },
-  {
-    title: 'Submission Requirements',
-    description: 'Checklist for your project submission',
-    category: 'Submission',
-  },
-];
-
-const tools = [
-  { name: 'Figma', description: 'Design and prototype', url: 'figma.com' },
-  { name: 'Vercel', description: 'Deploy web apps', url: 'vercel.com' },
-  { name: 'Supabase', description: 'Backend as a service', url: 'supabase.com' },
-  { name: 'MongoDB Atlas', description: 'Cloud database', url: 'mongodb.com' },
-];
+import { resourcesAPI } from '../../../../services/api';
 
 export function Resources() {
+  const [resources, setResources] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        const data = await resourcesAPI.list();
+        setResources(data);
+      } catch (err) {
+        console.error('Failed to load resources', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchResources();
+  }, []);
+
+  const tutorials = resources.filter(r => r.type === 'tutorials');
+  const templates = resources.filter(r => r.type === 'templates');
+  const docs = resources.filter(r => r.type === 'docs');
+  const tools = resources.filter(r => r.type === 'tools');
+
   const getLevelColor = (level: string) => {
     const colors: Record<string, string> = {
       Beginner: 'bg-green-500/20 text-green-400',
@@ -103,8 +39,18 @@ export function Resources() {
     return colors[level] || 'bg-gray-500/20 text-gray-400';
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mb-4" />
+        <p className="text-gray-400">Loading resources...</p>
+      </div>
+    );
+  }
+
   return (
     <motion.div
+      id="student-resources-view"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-6"
@@ -141,7 +87,7 @@ export function Resources() {
           <div className="grid md:grid-cols-2 gap-6">
             {tutorials.map((tutorial, i) => (
               <motion.div
-                key={i}
+                key={tutorial.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
@@ -153,10 +99,10 @@ export function Resources() {
                         <h3 className="font-semibold mb-2">{tutorial.title}</h3>
                         <div className="flex items-center gap-2 mb-2">
                           <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 text-xs">
-                            {tutorial.category}
+                            {tutorial.category || 'General'}
                           </Badge>
                           <Badge className={`${getLevelColor(tutorial.level)} text-xs`}>
-                            {tutorial.level}
+                            {tutorial.level || 'Beginner'}
                           </Badge>
                         </div>
                       </div>
@@ -165,15 +111,16 @@ export function Resources() {
 
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-3 text-gray-400">
-                        <span>⏱️ {tutorial.duration}</span>
+                        <span>⏱️ {tutorial.duration || 'N/A'}</span>
                         <span className="flex items-center gap-1">
                           <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                          {tutorial.rating}
+                          {tutorial.rating || 0}
                         </span>
                       </div>
                       <Button
                         size="sm"
                         className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white"
+                        onClick={() => tutorial.url ? window.open(tutorial.url, '_blank') : null}
                       >
                         Watch Now
                       </Button>
@@ -182,6 +129,7 @@ export function Resources() {
                 </Card>
               </motion.div>
             ))}
+            {tutorials.length === 0 && <p className="text-gray-400">No tutorials available.</p>}
           </div>
         </TabsContent>
 
@@ -190,7 +138,7 @@ export function Resources() {
           <div className="grid md:grid-cols-2 gap-6">
             {templates.map((template, i) => (
               <motion.div
-                key={i}
+                key={template.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
@@ -202,7 +150,7 @@ export function Resources() {
                         <h3 className="font-semibold mb-2">{template.title}</h3>
                         <p className="text-sm text-gray-400 mb-2">{template.description}</p>
                         <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">
-                          {template.category}
+                          {template.category || 'General'}
                         </Badge>
                       </div>
                       <Code className="w-8 h-8 text-cyan-400" />
@@ -211,9 +159,14 @@ export function Resources() {
                     <div className="flex items-center justify-between text-sm pt-3 border-t border-white/10">
                       <span className="text-gray-400">
                         <Download className="w-3 h-3 inline mr-1" />
-                        {template.downloads} downloads
+                        {template.downloads || 0} downloads
                       </span>
-                      <Button size="sm" variant="outline" className="border-white/10">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="border-white/10"
+                        onClick={() => template.url ? window.open(template.url, '_blank') : null}
+                      >
                         Download
                       </Button>
                     </div>
@@ -221,15 +174,16 @@ export function Resources() {
                 </Card>
               </motion.div>
             ))}
+            {templates.length === 0 && <p className="text-gray-400">No templates available.</p>}
           </div>
         </TabsContent>
 
         {/* Documentation */}
         <TabsContent value="docs">
           <div className="grid md:grid-cols-2 gap-6">
-            {documentation.map((doc, i) => (
+            {docs.map((doc, i) => (
               <motion.div
-                key={i}
+                key={doc.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
@@ -245,9 +199,14 @@ export function Resources() {
                         <p className="text-sm text-gray-400 mb-3">{doc.description}</p>
                         <div className="flex items-center gap-2">
                           <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30 text-xs">
-                            {doc.category}
+                            {doc.category || 'General'}
                           </Badge>
-                          <Button size="sm" variant="ghost" className="text-cyan-400 p-0 h-auto">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="text-cyan-400 p-0 h-auto"
+                            onClick={() => doc.url ? window.open(doc.url, '_blank') : null}
+                          >
                             Read More
                             <ExternalLink className="w-3 h-3 ml-1" />
                           </Button>
@@ -258,6 +217,7 @@ export function Resources() {
                 </Card>
               </motion.div>
             ))}
+            {docs.length === 0 && <p className="text-gray-400">No documentation available.</p>}
           </div>
         </TabsContent>
 
@@ -271,7 +231,7 @@ export function Resources() {
               <div className="grid md:grid-cols-2 gap-4">
                 {tools.map((tool, i) => (
                   <motion.div
-                    key={i}
+                    key={tool.id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}
@@ -279,13 +239,14 @@ export function Resources() {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="font-semibold mb-1">{tool.name}</h3>
+                        <h3 className="font-semibold mb-1">{tool.title}</h3>
                         <p className="text-sm text-gray-400">{tool.description}</p>
                       </div>
                       <Button
                         size="sm"
                         variant="outline"
                         className="border-white/10 gap-1"
+                        onClick={() => tool.url ? window.open(tool.url, '_blank') : null}
                       >
                         Visit
                         <ExternalLink className="w-3 h-3" />
@@ -293,48 +254,7 @@ export function Resources() {
                     </div>
                   </motion.div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Additional Resources */}
-          <Card className="border-white/10 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 mt-6">
-            <CardContent className="p-6">
-              <h3 className="font-semibold mb-4 flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-cyan-400" />
-                Additional Resources
-              </h3>
-              <div className="space-y-3 text-sm">
-                <a
-                  href="#"
-                  className="flex items-center justify-between p-3 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
-                >
-                  <div>
-                    <p className="font-medium text-white">Official Discord Community</p>
-                    <p className="text-xs text-gray-400">Connect with 10K+ developers</p>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-gray-400" />
-                </a>
-                <a
-                  href="#"
-                  className="flex items-center justify-between p-3 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
-                >
-                  <div>
-                    <p className="font-medium text-white">YouTube Channel</p>
-                    <p className="text-xs text-gray-400">200+ tutorial videos</p>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-gray-400" />
-                </a>
-                <a
-                  href="#"
-                  className="flex items-center justify-between p-3 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
-                >
-                  <div>
-                    <p className="font-medium text-white">GitHub Repository</p>
-                    <p className="text-xs text-gray-400">Open source examples</p>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-gray-400" />
-                </a>
+                {tools.length === 0 && <p className="text-gray-400">No tools available.</p>}
               </div>
             </CardContent>
           </Card>

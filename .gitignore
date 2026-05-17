@@ -48,9 +48,13 @@ Thumbs.db
 
 # Logs
 *.log
+db_logs.txt
 
 # Project specific
 "hackathon platofrm.zip"
 *.zip
 *.tar.gz
 *.rar
+
+# Backup files
+*.bak

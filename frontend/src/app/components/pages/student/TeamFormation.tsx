@@ -1,74 +1,154 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Users, Sparkles, UserPlus, Search, Filter } from 'lucide-react';
+import { Users, Sparkles, UserPlus, Search, Filter, Mail, Check, X, Edit2, Trash2, UserMinus, Trophy } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Badge } from '../../ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
 import { Progress } from '../../ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { toast } from 'sonner';
 
-const mockUsers = [
-  {
-    id: 1,
-    name: 'Sarah Chen',
-    avatar: 'Sarah',
-    skills: ['React', 'Node.js', 'UI/UX'],
-    interests: ['FinTech', 'AI/ML'],
-    matchScore: 95,
-    hackathons: 12,
-    wins: 3,
-  },
-  {
-    id: 2,
-    name: 'Michael Park',
-    avatar: 'Michael',
-    skills: ['Python', 'Machine Learning', 'Data Science'],
-    interests: ['AI/ML', 'DeepTech'],
-    matchScore: 92,
-    hackathons: 8,
-    wins: 2,
-  },
-  {
-    id: 3,
-    name: 'Emma Rodriguez',
-    avatar: 'Emma',
-    skills: ['Solidity', 'Web3.js', 'Smart Contracts'],
-    interests: ['Web3', 'FinTech'],
-    matchScore: 88,
-    hackathons: 15,
-    wins: 4,
-  },
-  {
-    id: 4,
-    name: 'David Kim',
-    avatar: 'David',
-    skills: ['React Native', 'Flutter', 'Mobile Dev'],
-    interests: ['FinTech', 'HealthTech'],
-    matchScore: 85,
-    hackathons: 10,
-    wins: 1,
-  },
-];
-
-const myTeams = [
-  {
-    id: 1,
-    name: 'Team Quantum',
-    hackathon: 'FinTech Innovation Challenge',
-    members: 4,
-    maxMembers: 4,
-    status: 'active',
-  },
-];
+import { teamAPI, userAPI, hackathonAPI } from '../../../../services/api';
 
 export function TeamFormation() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [recommendations] = useState(mockUsers);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [myTeams, setMyTeams] = useState<any[]>([]);
+  const [invitations, setInvitations] = useState<any[]>([]);
+  const [hackathons, setHackathons] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleInvite = (name: string) => {
-    toast.success(`Invitation sent to ${name}!`);
+  // Create Team State
+  const [newTeamName, setNewTeamName] = useState('');
+  const [selectedHackathonId, setSelectedHackathonId] = useState<string>('');
+  
+  // Edit Team State
+  const [editingTeamId, setEditingTeamId] = useState<number | null>(null);
+  const [editTeamName, setEditTeamName] = useState('');
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [recs, teams, invites, hacks] = await Promise.all([
+        userAPI.getRecommendations(),
+        teamAPI.listMyTeams(),
+        teamAPI.listInvitations(),
+        hackathonAPI.list({ limit: 10 }),
+      ]);
+      setRecommendations(recs);
+      setMyTeams(teams);
+      setInvitations(invites);
+      setHackathons(hacks.items || hacks);
+      if ((hacks.items || hacks).length > 0) {
+        setSelectedHackathonId(String((hacks.items || hacks)[0].id));
+      }
+    } catch (error) {
+      toast.error('Failed to load team data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleCreateTeam = async () => {
+    if (!newTeamName.trim()) return;
+    if (hackathons.length === 0) {
+      toast.error('No active hackathons found to create a team for.');
+      return;
+    }
+    if (!selectedHackathonId) {
+      toast.error('Please select a hackathon.');
+      return;
+    }
+    try {
+      await teamAPI.createTeam({ 
+        hackathon_id: parseInt(selectedHackathonId), 
+        name: newTeamName 
+      });
+      toast.success('Team created!');
+      setNewTeamName('');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to create team');
+    }
+  };
+
+  const handleEditTeam = async (teamId: number) => {
+    try {
+      await teamAPI.updateTeam(teamId, { name: editTeamName });
+      toast.success('Team updated!');
+      setEditingTeamId(null);
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to update team');
+    }
+  };
+
+  const handleInvite = async (userId: number, name: string) => {
+    if (myTeams.length === 0) {
+      toast.error('You must create a team first before inviting others!');
+      return;
+    }
+    // Default to the first team they are a leader of
+    const leadTeam = myTeams.find(t => t.members.find((m: any) => m.role === 'leader'));
+    if (!leadTeam) {
+      toast.error('You must be a team leader to invite members.');
+      return;
+    }
+
+    try {
+      await teamAPI.inviteUser(leadTeam.id, userId);
+      toast.success(`Invitation sent to ${name}!`);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || 'Failed to send invite');
+    }
+  };
+
+  const handleAccept = async (memberId: number) => {
+    try {
+      await teamAPI.acceptInvitation(memberId);
+      toast.success('Invitation accepted!');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to accept');
+    }
+  };
+
+  const handleReject = async (memberId: number) => {
+    try {
+      await teamAPI.rejectInvitation(memberId);
+      toast.success('Invitation rejected');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to reject');
+    }
+  };
+
+  const handleDeleteTeam = async (teamId: number) => {
+    if (!window.confirm('Are you sure you want to delete this team? This action cannot be undone.')) return;
+    try {
+      await teamAPI.deleteTeam(teamId);
+      toast.success('Team deleted');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to delete team');
+    }
+  };
+
+  const handleRemoveMember = async (teamId: number, userId: number, userName: string) => {
+    if (!window.confirm(`Remove ${userName} from the team?`)) return;
+    try {
+      await teamAPI.removeMember(teamId, userId);
+      toast.success('Member removed');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to remove member');
+    }
   };
 
   return (
@@ -84,9 +164,86 @@ export function TeamFormation() {
         <p className="text-gray-400 mt-2">Find perfect teammates with AI-powered matching</p>
       </div>
 
+      {/* Invitations Inbox */}
+      {invitations.length > 0 && (
+        <Card className="border-cyan-500/30 bg-cyan-500/5 backdrop-blur-sm shadow-lg shadow-cyan-500/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-cyan-400" />
+              Pending Invitations
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {invitations.map((invite) => (
+              <div key={invite.id} className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10">
+                <div>
+                  <h3 className="font-semibold text-lg">{invite.team_name}</h3>
+                  <p className="text-sm text-gray-400">Invited to join as {invite.role}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleAccept(invite.id)}
+                    className="bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30"
+                  >
+                    <Check className="w-4 h-4 mr-1" /> Accept
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleReject(invite.id)}
+                    className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+                  >
+                    <X className="w-4 h-4 mr-1" /> Reject
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Create Team Card */}
+      <Card id="create-team-card" className="border-cyan-500/30 bg-gradient-to-r from-cyan-500/5 to-purple-500/5">
+        <CardHeader>
+          <CardTitle className="text-xl">Create a New Team</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-4 items-end">
+            <div className="flex-1 space-y-2 w-full">
+              <label className="text-sm font-medium text-gray-400">Select Hackathon</label>
+              <Select value={selectedHackathonId} onValueChange={setSelectedHackathonId}>
+                <SelectTrigger className="bg-white/5 border-white/10">
+                  <SelectValue placeholder="Choose a hackathon" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#12121a] border-white/10">
+                  {hackathons.map((h) => (
+                    <SelectItem key={h.id} value={String(h.id)}>
+                      {h.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1 space-y-2 w-full">
+              <label className="text-sm font-medium text-gray-400">Team Name</label>
+              <Input
+                placeholder="Enter a cool team name..."
+                value={newTeamName}
+                onChange={(e) => setNewTeamName(e.target.value)}
+                className="bg-white/5 border-white/10"
+              />
+            </div>
+            <Button onClick={handleCreateTeam} className="bg-cyan-500 hover:bg-cyan-600 px-8">
+              Create Team
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* My Teams */}
       <Card className="border-white/10 bg-black/40 backdrop-blur-sm">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5 text-cyan-400" />
             My Teams
@@ -98,26 +255,92 @@ export function TeamFormation() {
               {myTeams.map((team) => (
                 <div
                   key={team.id}
-                  className="p-4 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
+                  className="p-4 rounded-lg border border-white/10 hover:bg-white/5 transition-all group"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold mb-1">{team.name}</h3>
-                      <p className="text-sm text-gray-400">{team.hackathon}</p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {team.members}/{team.maxMembers} members
-                      </p>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        {editingTeamId === team.id ? (
+                          <div className="flex gap-2 items-center">
+                            <Input
+                              value={editTeamName}
+                              onChange={(e) => setEditTeamName(e.target.value)}
+                              className="bg-white/5 border-white/10 h-8"
+                              autoFocus
+                            />
+                            <Button size="sm" variant="ghost" onClick={() => handleEditTeam(team.id)}>
+                              <Check className="w-4 h-4 text-green-400" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => setEditingTeamId(null)}>
+                              <X className="w-4 h-4 text-red-400" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-lg">{team.name}</h3>
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={() => {
+                                  setEditingTeamId(team.id);
+                                  setEditTeamName(team.name);
+                                }}
+                                className="p-1 hover:bg-white/10 rounded"
+                              >
+                                <Edit2 className="w-3.5 h-3.5 text-gray-400 hover:text-cyan-400" />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteTeam(team.id)}
+                                className="p-1 hover:bg-red-500/10 rounded"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-400" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                          <Trophy className="w-3 h-3" />
+                          {team.hackathon_name || 'Hackathon ID: ' + team.hackathon_id}
+                        </p>
+                      </div>
+                      <Badge className="bg-green-500/20 text-green-400 border-green-500/30 capitalize">
+                        Active
+                      </Badge>
                     </div>
-                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                      {team.status}
-                    </Badge>
+
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Members</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {team.members.map((m: any) => (
+                          <div key={m.user_id} className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5">
+                            <div className="flex items-center gap-2">
+                              <Avatar className="w-6 h-6">
+                                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${m.full_name}`} />
+                                <AvatarFallback>{m.full_name.slice(0, 1)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="text-sm font-medium">{m.full_name}</p>
+                                <p className="text-[10px] text-gray-500 capitalize">{m.role}</p>
+                              </div>
+                            </div>
+                            {m.role !== 'leader' && (
+                              <button 
+                                onClick={() => handleRemoveMember(team.id, m.user_id, m.full_name)}
+                                className="p-1 hover:bg-red-500/10 rounded text-gray-500 hover:text-red-400 transition-colors"
+                              >
+                                <UserMinus className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             <p className="text-gray-400 text-center py-8">
-              You're not in any team yet. Find teammates below!
+              You're not in any team yet. Create one or wait for an invitation!
             </p>
           )}
         </CardContent>
@@ -147,9 +370,17 @@ export function TeamFormation() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 gap-4">
-            {recommendations.map((user, i) => (
+        <CardContent id="ai-recommendations">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <p className="text-gray-400">Loading AI Recommendations...</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              {recommendations.length === 0 ? (
+                <p className="text-gray-400 col-span-2 text-center py-4">No recommendations found. Try adding more skills to your profile!</p>
+              ) : (
+                recommendations.map((user, i) => (
               <motion.div
                 key={user.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -176,8 +407,8 @@ export function TeamFormation() {
                           </div>
                           <Button
                             size="sm"
-                            onClick={() => handleInvite(user.name)}
-                            className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white"
+                            onClick={() => handleInvite(user.id, user.name)}
+                            className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white shadow-lg shadow-cyan-500/20"
                           >
                             <UserPlus className="w-4 h-4 mr-1" />
                             Invite
@@ -227,8 +458,10 @@ export function TeamFormation() {
                   </CardContent>
                 </Card>
               </motion.div>
-            ))}
-          </div>
+                ))
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 

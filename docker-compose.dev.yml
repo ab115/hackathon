@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    # Removed container_name to allow COMPOSE_PROJECT_NAME prefixing naturally
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-hackfusion}
+    ports:
+      - "${DB_EXTERNAL_PORT:-5432}:5432"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_EXTERNAL_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-hackfusion}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      JWT_SECRET: ${JWT_SECRET}
+      ENVIRONMENT: development
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:80}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+    env_file:
+      - .env
+    ports:
+      - "${API_DEV_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app
+      - uploads_data_dev:/app/uploads
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    command: npm run dev
+    ports:
+      - "${FRONTEND_DEV_PORT:-5173}:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A app.tasks.worker worker --loglevel=info
+    depends_on:
+      - redis
+      - db
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-hackfusion}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      ENVIRONMENT: development
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+volumes:
+  postgres_data_dev:
+  uploads_data_dev:

@@ -9,25 +9,43 @@ import { Textarea } from '../../ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
 import { Badge } from '../../ui/badge';
 import { toast } from 'sonner';
+import { useAuth } from '../../../../context/AuthContext';
+import { userAPI } from '../../../../services/api';
 
 export function StudentProfile() {
+  const { user } = useAuth();
+  
   const [profile, setProfile] = useState({
-    name: 'Alex Johnson',
-    email: 'alex.johnson@email.com',
-    bio: 'Passionate developer focused on FinTech and AI. Love building innovative solutions.',
-    github: 'alexjohnson',
+    name: user?.full_name || '',
+    email: user?.email || '',
+    bio: user?.bio || '',
+    github: 'alexjohnson', // Still hardcoded for now as DB doesn't have social fields
     linkedin: 'alexjohnson',
     twitter: '@alexjohnson',
     website: 'alexjohnson.dev',
-    skills: ['React', 'Python', 'Machine Learning', 'Blockchain', 'Node.js'],
-    interests: ['FinTech', 'AI/ML', 'Web3'],
+    skills: user?.skills ? user.skills.split(',').map((s: string) => s.trim()) : [],
+    interests: user?.interests ? user.interests.split(',').map((s: string) => s.trim()) : [],
   });
 
   const [newSkill, setNewSkill] = useState('');
   const [newInterest, setNewInterest] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    toast.success('Profile updated successfully!');
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await userAPI.updateProfile({
+        full_name: profile.name,
+        bio: profile.bio,
+        skills: profile.skills.join(', '),
+        interests: profile.interests.join(', ')
+      });
+      toast.success('Profile updated successfully!');
+    } catch (error) {
+      toast.error('Failed to update profile');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const addSkill = () => {
@@ -54,6 +72,7 @@ export function StudentProfile() {
 
   return (
     <motion.div
+      id="student-profile-view"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="max-w-4xl space-y-6"
@@ -76,8 +95,8 @@ export function StudentProfile() {
         <CardContent className="space-y-6">
           <div className="flex items-center gap-6">
             <Avatar className="w-24 h-24 border-2 border-cyan-500/30">
-              <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex" />
-              <AvatarFallback>AJ</AvatarFallback>
+              <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.full_name || 'User'}`} />
+              <AvatarFallback>{user?.full_name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
             </Avatar>
             <div>
               <Button variant="outline" className="border-white/10 mb-2">
@@ -261,9 +280,10 @@ export function StudentProfile() {
       <div className="flex gap-4">
         <Button
           onClick={handleSave}
+          disabled={isSaving}
           className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white"
         >
-          Save Changes
+          {isSaving ? 'Saving...' : 'Save Changes'}
         </Button>
         <Button variant="outline" className="border-white/10">
           Cancel
