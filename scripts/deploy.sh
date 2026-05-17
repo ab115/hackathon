@@ -71,7 +71,11 @@ fi
 
 # Check if base .env exists (for secrets)
 if [ ! -f ".env" ]; then
-    echo "Warning: Base .env file not found. Secrets might be missing!"
+    echo "❌ CRITICAL ERROR: Base '.env' file not found!"
+    echo "Since it is in .gitignore, it was not copied to the server."
+    echo "You MUST create the '.env' file on the server with your secrets (JWT_SECRET, PAYU_MERCHANT_KEY, etc.) before running this script."
+    echo "Deployment aborted."
+    exit 1
 fi
 
 # Execute docker-compose with BOTH env files (base for secrets, env-specific for ports/names)
