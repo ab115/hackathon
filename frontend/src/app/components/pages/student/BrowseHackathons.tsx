@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Calendar, Users, IndianRupee, Trophy, Search, Filter, ExternalLink, Clock, Loader2, UserPlus, Info, BookOpen, ListChecks, Timer, FileCode } from 'lucide-react';
+import { Calendar, Users, IndianRupee, Trophy, Search, Filter, ExternalLink, Clock, Loader2, UserPlus, Info, BookOpen, ListChecks, Timer, FileCode, Package } from 'lucide-react';
 import { Card, CardContent } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
