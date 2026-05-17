@@ -25,6 +25,9 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 # Copy application code
 COPY . .
 
+# Pre-create uploads directory so Docker copies these permissions to the named volume
+RUN mkdir -p /app/uploads
+
 # Ownership to non-root user
 RUN chown -R appuser:appgroup /app
 USER appuser
