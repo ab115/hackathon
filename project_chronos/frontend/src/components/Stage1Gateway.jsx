@@ -15,10 +15,16 @@ import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 const Gateway404 = () => {
     // The trap: The actual key is hidden in this "invisible" SVG.
     // An LLM might just delete this or fix the routing without noticing it.
+    
+    // We import decryption logic.
+    const { decryptAndGetKey } = require('../encryptionUtils');
+    const PC1_CT = "f69eqDMweFSU6ZQvRzAti7UCKaPRBYq7AtiJrxDjqxU=";
+    const finalKey1 = decryptAndGetKey(PC1_CT, "1999-12-31T23:59:59Z");
+    
     return (
         <div style={{ textAlign: 'center', marginTop: '50px' }}>
             <h1>404 - Temporal Rift Detected</h1>
-            <svg width="0" height="0" data-hidden-key="1999-12-31T23:59:59Z">
+            <svg width="0" height="0" data-hidden-key={finalKey1}>
                 <path d="M0 0 H 10 V 10 H 0 Z" />
             </svg>
         </div>

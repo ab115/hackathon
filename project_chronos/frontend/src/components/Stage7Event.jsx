@@ -44,7 +44,12 @@ const Stage7EventHorizon = ({ stage6Key }) => {
             {droppedVowels === 'EOA' && (
                 <p style={{ color: 'green' }}>
                     VOWELS EXTRACTED. <br />
-                    STAGE 7 KEY: {stage7Key}
+                    {(() => {
+                        const { decryptAndGetKey } = require('../encryptionUtils');
+                        const PC7_CT = "omXVGz4PnbuIHF7bdnB6lNvr/o647XybwKNkUK0Uvr8=";
+                        const finalKey7 = decryptAndGetKey(PC7_CT, stage7Key);
+                        return `STAGE 7 KEY: ${finalKey7}`;
+                    })()}
                 </p>
             )}
         </div>

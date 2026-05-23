@@ -42,31 +42,47 @@ def get_db():
     finally:
         db.close()
 
-# --- Project Key Registry ---
-PROJECT_KEYS = {
+import hashlib
+
+# --- Project Flag Registry ---
+# The local apps must decrypt these flags using their correct state, 
+# then hash (TEAM_NAME + flag) to generate the final 6-char key.
+PROJECT_FLAGS = {
     "rogue_override": {
-        1: "73c2a1",
-        2: "d5666ed4",
-        3: "de7795f2b8",
-        4: "1a81c0c5f6",
-        5: "3dff9bc8da",
-        6: "95e4ce16bf",
-        7: "5749f2bd66",
-        8: "12f7f562da",
-        9: "c7ae70b333",
-        10: "9cc49f98ffc9205d7be4080607669b83fe7c9760916a23612115af85ede31d7d" 
+        1: "flag_ro_1_x8f2",
+        2: "flag_ro_2_p9q1",
+        3: "flag_ro_3_m4n2",
+        4: "flag_ro_4_1111",
+        5: "flag_ro_5_2222",
+        6: "flag_ro_6_3333",
+        7: "flag_ro_7_4444",
+        8: "flag_ro_8_5555",
+        9: "flag_ro_9_6666",
+        10: "flag_ro_10_7777" 
     },
     "project_chronos": {
-        1: "1999-12-31T23:59:59Z",
-        2: "8b19523e",
-        3: "OGIxOTUyM2",
-        4: "dd8b059cde",
-        5: "ZGQ4YjA1OW",
-        6: "cad3aca4b7",
-        7: "Y2FkM2FjYT",
-        8: "e4654fdc79",
-        9: "ZTQ2NTRmZG",
-        10: "784e658f69216d39a210c772cf9022505fe0b3f9a6235e4eb96fb8c3bb526029"
+        1: "flag_pc_1_a1b2",
+        2: "flag_pc_2_c3d4",
+        3: "flag_pc_3_e5f6",
+        4: "flag_pc_4_g7h8",
+        5: "flag_pc_5_i9j0",
+        6: "flag_pc_6_k1l2",
+        7: "flag_pc_7_m3n4",
+        8: "flag_pc_8_o5p6",
+        9: "flag_pc_9_q7r8",
+        10: "flag_pc_10_s9t0"
+    },
+    "project_quantum": {
+        1: "flag_pq_1_1111",
+        2: "flag_pq_2_2222",
+        3: "flag_pq_3_3333",
+        4: "flag_pq_4_4444",
+        5: "flag_pq_5_5555",
+        6: "flag_pq_6_6666",
+        7: "flag_pq_7_7777",
+        8: "flag_pq_8_8888",
+        9: "flag_pq_9_9999",
+        10: "flag_pq_10_0000"
     }
 }
 
@@ -77,7 +93,7 @@ class SubmitKeyRequest(BaseModel):
 
 @app.post("/submit")
 def submit_key(request: SubmitKeyRequest, db: Session = Depends(get_db)):
-    if request.project_id not in PROJECT_KEYS:
+    if request.project_id not in PROJECT_FLAGS:
         raise HTTPException(status_code=400, detail="Invalid Project ID.")
         
     team = db.query(TeamProgress).filter(
@@ -96,7 +112,11 @@ def submit_key(request: SubmitKeyRequest, db: Session = Depends(get_db)):
     if current_stage > 10:
         return {"message": "All stages completed!", "team": team.team_name, "score": team.score, "stage": team.stage}
         
-    expected_key = PROJECT_KEYS[request.project_id].get(current_stage)
+    secret_flag = PROJECT_FLAGS[request.project_id].get(current_stage)
+    if not secret_flag:
+        raise HTTPException(status_code=400, detail="No flag configured for this stage.")
+        
+    expected_key = hashlib.md5(f"{request.team_name}_{secret_flag}".encode()).hexdigest()[:6]
     
     # "pass" is allowed for easy admin testing
     if request.key == expected_key or request.key == "pass":

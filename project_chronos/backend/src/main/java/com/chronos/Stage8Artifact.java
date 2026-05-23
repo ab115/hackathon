@@ -54,7 +54,9 @@ public class Stage8EncryptedArtifact {
 
     public static void main(String[] args) {
         if (args.length > 0) {
-            System.out.println("STAGE 8 KEY: " + deserializeAndUnlock(args[0]));
+            String stateValue = deserializeAndUnlock(args[0]);
+            String PC8_CT = "EdPx8+xfVRrmISdboz4013ULGEHuppnSB6AV3JVy/y8=";
+            System.out.println("STAGE 8 KEY: " + EncryptionUtils.decryptAndGetKey(PC8_CT, stateValue));
         }
     }
 }

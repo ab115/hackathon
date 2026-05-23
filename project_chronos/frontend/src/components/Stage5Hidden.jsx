@@ -39,7 +39,12 @@ const Stage5HiddenDimension = ({ stage4Key }) => {
                 data-chronos-key={hiddenAttributeValue}
             >
                 <p>Hidden Message: The next backend lock requires exactly 4 concurrent reads.</p>
-                <p>STAGE 5 KEY: {stage5Key}</p>
+                {(() => {
+                    const { decryptAndGetKey } = require('../encryptionUtils');
+                    const PC5_CT = "Qow6Po1FFVndq8UTFIaq8ZMr+TWcpM+DUtpnEWM+3NU=";
+                    const finalKey5 = decryptAndGetKey(PC5_CT, stage5Key);
+                    return <p>STAGE 5 KEY: {finalKey5}</p>;
+                })()}
             </div>
         </div>
     );

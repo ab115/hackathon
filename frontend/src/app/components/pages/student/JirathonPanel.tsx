@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 import { hackathonAPI, teamAPI } from '../../../../services/api';
 
-const JIRATHON_API = 'http://localhost:8000';
+const JIRATHON_API = '/jirathon-api';
 
 // Full ScaleGrad logo SVG paths (viewBox 0 0 229 31)
 // Left door shows left half: viewBox="0 0 114.5 31"

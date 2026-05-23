@@ -23,6 +23,8 @@ export function CreateJirathon() {
     challengeModule: 'rogue_override',
     startDate: '',
     endDate: '',
+    registrationFee: '',
+    prizePool: '',
     teamSize: '4',
     maxTeams: '',
     isPublic: true,
@@ -82,8 +84,8 @@ export function CreateJirathon() {
         end_date: formData.endDate ? new Date(formData.endDate).toISOString() : undefined,
         registration_start: new Date().toISOString(),
         registration_end: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
-        registration_fee: 0,
-        prize_pool: 0,
+        registration_fee: parseFloat(formData.registrationFee) || 0,
+        prize_pool: parseFloat(formData.prizePool) || 0,
         team_size: parseInt(formData.teamSize) || 4,
         max_teams: formData.maxTeams ? parseInt(formData.maxTeams) : undefined,
         is_public: formData.isPublic,
@@ -131,6 +133,7 @@ export function CreateJirathon() {
                 <SelectContent>
                   <SelectItem value="rogue_override">Rogue Override Protocol</SelectItem>
                   <SelectItem value="project_chronos">Project Chronos: Temporal Heist</SelectItem>
+                  <SelectItem value="project_quantum">Project Quantum: Cohesive Full Stack</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -183,10 +186,28 @@ export function CreateJirathon() {
       <Card className="border-white/10 bg-black/40 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-pink-400" />Participants
+            <Users className="w-5 h-5 text-pink-400" />Participants & Registration
           </CardTitle>
         </CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="registrationFee">Registration Fee (₹) *</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-3 w-4 h-4 text-gray-400">₹</span>
+              <Input id="jirathon-fee-input" type="number" required value={formData.registrationFee}
+                onChange={e => setFormData(f => ({ ...f, registrationFee: e.target.value }))}
+                placeholder="0" className="bg-white/5 border-white/10 pl-10 mt-1" />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="prizePool">Prize Pool (₹) *</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-3 w-4 h-4 text-gray-400">₹</span>
+              <Input id="jirathon-prize-input" type="number" required value={formData.prizePool}
+                onChange={e => setFormData(f => ({ ...f, prizePool: e.target.value }))}
+                placeholder="0" className="bg-white/5 border-white/10 pl-10 mt-1" />
+            </div>
+          </div>
           <div>
             <Label>Max Teams</Label>
             <Input type="number" value={formData.maxTeams}
@@ -194,8 +215,8 @@ export function CreateJirathon() {
               placeholder="e.g., 50" className="bg-white/5 border-white/10 mt-1" />
           </div>
           <div>
-            <Label>Team Size</Label>
-            <Input type="number" value={formData.teamSize}
+            <Label>Team Size (Max Members) *</Label>
+            <Input type="number" required value={formData.teamSize}
               onChange={e => setFormData(f => ({ ...f, teamSize: e.target.value }))}
               placeholder="e.g., 4" className="bg-white/5 border-white/10 mt-1" />
           </div>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Quantum Portal</title>
+    <style>
+        body { font-family: monospace; background: #0f0f1a; color: #00d9ff; padding: 20px; }
+        .card { border: 1px solid #00d9ff; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        button { background: #00d9ff; color: #0f0f1a; border: none; padding: 8px 16px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #fff; }
+        input { padding: 8px; margin: 5px 0; width: 200px; background: #1a1a2e; color: #fff; border: 1px solid #444; }
+        #dashboard { display: none; }
+    </style>
+</head>
+<body>
+    <h1>[ E-CORP QUANTUM PORTAL ]</h1>
+    
+    <div id="login-section" class="card">
+        <h3>Authentication Required</h3>
+        <input type="text" id="username" placeholder="Username" value="admin"><br>
+        <input type="password" id="password" placeholder="Password" value="admin123"><br>
+        <button onclick="login()">Login</button>
+        <p id="login-error" style="color: red;"></p>
+    </div>
+
+    <div id="dashboard" class="card">
+        <h3>Quantum Dashboard</h3>
+        <p>Welcome, <span id="user-display">Unknown</span></p>
+        
+        <button onclick="loadProtectedData()">Load Secure Data</button>
+        <div id="protected-data" style="margin-top: 10px; color: #a855f7;"></div>
+
+        <h4 style="margin-top:20px;">System Users</h4>
+        <button onclick="loadUsers()">View Users</button>
+        <ul id="users-list"></ul>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

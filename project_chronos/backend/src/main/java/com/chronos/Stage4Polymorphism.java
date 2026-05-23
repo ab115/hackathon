@@ -67,7 +67,9 @@ public class Stage4Polymorphism {
     
     public static void main(String[] args) {
         if (args.length > 0) {
-            System.out.println("STAGE 4 KEY: " + resolveParadox(args[0]));
+            String stateValue = resolveParadox(args[0]);
+            String PC4_CT = "XDxKWdEVEuQgaQJy7QgST2RDLqusVFYxG2r+GvNBlQU=";
+            System.out.println("STAGE 4 KEY: " + EncryptionUtils.decryptAndGetKey(PC4_CT, stateValue));
         }
     }
 }

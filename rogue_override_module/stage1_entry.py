@@ -28,7 +28,8 @@ config_data = """
         "S": {
             "E": {
                 "N": {
-                    "value": "73c2a1"
+                    "value": "73c2a1",
+                    "target_cipher": "17VpD0u7xhOcdcHN+6QVRol/R3l8M/SodQsn6bJ3w0U="
                 },
                 "S": {
                     "value": "trap1"
@@ -57,11 +58,12 @@ def get_initial_seed():
         # BUG: Currently returns "trap3" or crashes.
         # You need to return the value at 'X' using the maze path.
         current_node = matrix
-        for key in current_node.keys():
-            if isinstance(current_node[key], dict):
-                current_node = current_node[key]
-            else:
-                return current_node[key]
+        path = ['E', 'S', 'E', 'N']
+        for key in path:
+            current_node = current_node[key]
+        
+        from encryption_utils import decrypt_and_get_key
+        return decrypt_and_get_key(current_node['target_cipher'], current_node['value'])
     except Exception:
         pass
     

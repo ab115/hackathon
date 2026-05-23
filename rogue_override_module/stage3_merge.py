@@ -36,4 +36,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Missing Stage 2 Key")
         sys.exit(1)
+
     merge_keys(sys.argv[1])

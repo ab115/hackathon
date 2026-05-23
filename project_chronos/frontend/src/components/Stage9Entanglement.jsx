@@ -54,7 +54,14 @@ const Stage9QuantumEntanglement = ({ stage8Key }) => {
             <button onClick={triggerSync}>Sync Timelines</button>
             <p>Time A: {timeA}</p>
             <p>Time B: {timeB}</p>
-            {finalKey && <p style={{ color: 'blue' }}>STAGE 9 KEY: {finalKey}</p>}
+            {finalKey && (
+                (() => {
+                    const { decryptAndGetKey } = require('../encryptionUtils');
+                    const PC9_CT = "H3Ily9kwIwr7Yfoxk4tOWdvNui/JeDyDefw+euf3x4c=";
+                    const stage9Key = decryptAndGetKey(PC9_CT, finalKey);
+                    return <p style={{ color: 'blue' }}>STAGE 9 KEY: {stage9Key}</p>;
+                })()
+            )}
         </div>
     );
 };

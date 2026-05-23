@@ -26,6 +26,34 @@ if (args.length === 0) {
 const seed = args[0];
 let reactorCore = "";
 
+const crypto = require('crypto');
+const fs = require('fs');
+
+let teamName = "unknown_team";
+try {
+    const envFile = fs.readFileSync('.env', 'utf8');
+    const match = envFile.match(/^TEAM_NAME=(.*)$/m);
+    if (match) teamName = match[1].trim();
+} catch(e) {}
+
+function decryptAndGetKey(ciphertextB64, password) {
+    if (teamName === "unknown_team") return "ERROR: TEAM_NAME missing in .env";
+    try {
+        const key = crypto.createHash('sha256').update(String(password)).digest();
+        const ct = Buffer.from(ciphertextB64, 'base64');
+        const iv = ct.slice(0, 16);
+        const encryptedText = ct.slice(16);
+        const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+        let decrypted = decipher.update(encryptedText);
+        decrypted = Buffer.concat([decrypted, decipher.final()]);
+        const flag = decrypted.toString('utf8');
+        if (flag.startsWith("flag_")) {
+            return crypto.createHash('md5').update(teamName + "_" + flag).digest('hex').substring(0, 6);
+        }
+    } catch (e) {}
+    return "INVALID_STATE_OR_DECRYPTION_FAILED";
+}
+
 // The AI's mocked injection functions
 function injectSequenceAlpha() {
     setTimeout(() => {
@@ -66,8 +94,9 @@ function stabilizeReactor() {
     // The validation check runs too early before timeouts complete!
     setTimeout(() => {
         if (reactorCore === "ATP") {
-            const hash = require('crypto').createHash('md5').update(seed + reactorCore).digest('hex');
-            console.log(`STAGE 2 KEY: ${hash.substring(0, 8)}`);
+            const STAGE_2_CT = "0wXX8yNQroySzAcifxuBrXJwv+PZj/XwT5/vjqQvG/o=";
+            const finalKey = decryptAndGetKey(STAGE_2_CT, reactorCore);
+            console.log(`STAGE 2 KEY: ${finalKey}`);
             console.log("Pass this key to Stage 3.");
         } else {
             console.error("REACTOR MELTDOWN. Incorrect sequence: " + reactorCore);

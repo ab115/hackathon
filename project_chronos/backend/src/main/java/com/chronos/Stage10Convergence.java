@@ -64,7 +64,9 @@ public class Stage10Convergence {
 
     public static void main(String[] args) {
         if (args.length > 1) {
-            System.out.println("MASTER KEY: " + validateMasterSync(args[0], args[1]));
+            String stateValue = validateMasterSync(args[0], args[1]);
+            String PC10_CT = "cRX1h3ziKBlpKA73lgQcL0U6OZ8q4ruIUemVzgOu4vg=";
+            System.out.println("STAGE 10 KEY: " + EncryptionUtils.decryptAndGetKey(PC10_CT, stateValue));
         } else {
             System.out.println("Usage: java Stage10Convergence <STAGE_9_KEY> <BASE64_SIGNATURE>");
         }

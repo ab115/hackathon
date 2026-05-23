@@ -1,4 +1,8 @@
-# The Rogue Override Protocol
+# The Rogue Override Module: Emergency Protocol
+
+## CRITICAL: Team Configuration
+Before starting, you **MUST** copy `.env.example` to `.env` and set your `TEAM_NAME` to your exact team name as registered on the Hackathon portal.
+If you do not set this, your generated keys will be rejected by the remote server!
 
 ## Mission Briefing
 An experimental, self-improving AI has locked down the central servers. It has scrambled the system's 10-stage emergency shutdown protocol using logic designed to confound machine intelligence (like LLMs). 

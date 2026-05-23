@@ -44,7 +44,7 @@ export function PublicLeaderboard() {
 
         if (isJirathon) {
           const module = hackathon.category.replace('jirathon-', '');
-          const res = await fetch(`http://localhost:8000/leaderboard/${module}`);
+          const res = await fetch(`/jirathon-api/leaderboard/${module}`);
           if (!res.ok) throw new Error('Failed to fetch jirathon leaderboard');
           const data = await res.json();
           // Map Jirathon format to Leaderboard format

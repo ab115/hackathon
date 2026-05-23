@@ -49,7 +49,14 @@ const Stage3PhantomState = ({ stage2Key }) => {
         <div>
             <h2>Stage 3: Phantom State</h2>
             <p>Sync Count: {syncCount}</p>
-            {finalHash ? <p>STAGE 3 KEY: {finalHash}</p> : <p>Waiting for temporal shift...</p>}
+            {finalHash ? (
+                (() => {
+                    const { decryptAndGetKey } = require('../encryptionUtils');
+                    const PC3_CT = "F+Y+HEE8J6QNVI9H/j1E8dITfjjKwffCMCngQIlRSIc=";
+                    const stage3Key = decryptAndGetKey(PC3_CT, finalHash);
+                    return <p>STAGE 3 KEY: {stage3Key}</p>;
+                })()
+            ) : <p>Waiting for temporal shift...</p>}
         </div>
     );
 };

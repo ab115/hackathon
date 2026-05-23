@@ -3,7 +3,12 @@
 ## Mission Briefing
 A rogue Chronomancer has shattered the timeline of the central banking system. The timeline fragments are scattered across the React frontend portal and the Java backend engine. 
 
-You are the Temporal Engineering crew (Team of 4). You must navigate through 10 "temporal anomalies", alternating between fixing the React UI and the Java API to restore the `MASTER_TIMELINE_KEY`.
+## CRITICAL: Environment Setup
+Before starting, you **MUST** configure your team name so the system can generate your valid submission keys:
+1. Copy `.env.example` to `.env` in the **root directory** and set `TEAM_NAME=your_team_name`.
+2. Copy `frontend/.env.example` to `frontend/.env` and set `REACT_APP_TEAM_NAME=your_team_name`.
+3. In the `frontend` directory, run `npm install` to install dependencies (including the crypto modules required for validation).
+If you do not do this, your keys will be rejected by the remote server!
 
 ## Instructions
 1. This is a sequential, full-stack challenge (Stage 1 to 10).

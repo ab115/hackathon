@@ -80,9 +80,9 @@ fi
 
 # Execute docker-compose with BOTH env files (base for secrets, env-specific for ports/names)
 if [ "$ENV" = "dev" ]; then
-    COMPOSE_CMD="docker-compose --env-file .env --env-file $ENV_FILE -f docker-compose.yml -f docker-compose.dev.yml"
+    COMPOSE_CMD="docker-compose --env-file .env --env-file $ENV_FILE -f docker-compose.yml -f jirathon/docker-compose.yml -f docker-compose.dev.yml"
 else
-    COMPOSE_CMD="docker-compose --env-file .env --env-file $ENV_FILE -f docker-compose.yml"
+    COMPOSE_CMD="docker-compose --env-file .env --env-file $ENV_FILE -f docker-compose.yml -f jirathon/docker-compose.yml"
 fi
 
 case $ACTION in

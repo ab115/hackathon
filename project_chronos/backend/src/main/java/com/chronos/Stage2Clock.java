@@ -46,7 +46,9 @@ public class Stage2Clock {
     public static void main(String[] args) {
         // Usage: java Stage2Clock <STAGE_1_KEY>
         if (args.length > 0) {
-            System.out.println("STAGE 2 KEY: " + validateTemporalEpoch(args[0]));
+            String stateValue = validateTemporalEpoch(args[0]);
+            String PC2_CT = "PfRCvyV8hTrSUGIVORQ1CJIW2xYl9Jak6n/k7+sg1Sw=";
+            System.out.println("STAGE 2 KEY: " + EncryptionUtils.decryptAndGetKey(PC2_CT, stateValue));
         } else {
             System.out.println("Missing Stage 1 Key");
         }

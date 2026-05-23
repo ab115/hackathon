@@ -63,7 +63,9 @@ public class Stage6Concurrency {
             Stage6Concurrency fracture = new Stage6Concurrency();
             for(int i=0; i<4; i++) {
                 new Thread(() -> {
-                    System.out.println(fracture.accessTimeline(args[0]));
+                    String stateValue = fracture.accessTimeline(args[0]);
+            String PC6_CT = "+Z9ZlZMagA5BS4f84u1FpdEW4qnhu/kZMwcOWdT9g+I=";
+            System.out.println("STAGE 6 KEY: " + EncryptionUtils.decryptAndGetKey(PC6_CT, stateValue));
                 }).start();
             }
         }
